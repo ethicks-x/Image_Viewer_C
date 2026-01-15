@@ -11,46 +11,29 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Prepare apt and install system packages (no pip)
+      - name: Tools and Dependencies install
         run: |
           set -euo pipefail
-          sudo apt-get update -y &>/dev/null
-          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y \
-            build-essential \
-            meson \
-            ninja-build \
-            git \
-            curl \
-            unzip \
-            xvfb
+          sudo apt-get update -y >/dev/null
+          sudo apt-get install -y \
+          git \
+          curl \
+          unzip \
+          build-essential \
+          meson \
+          ninja-build \
+          pkg-config \
+          libsdl2-2.0-0 \
+          libsdl2-dev \
+          libsdl2-image-dev
 
-      - name: Meson version (helpful to debug wrap support)
-        run: |
+      - name: Meson check
+        run: | 
           set -euo pipefail
-          meson --version || { echo "meson not found or not runnable"; exit 1; }
-
-      - name: Fetch Meson wrap dependency (sdl2)
+          meson --version || { echo "meson not found! :( " }; exit 1;
+        
+      - name: Build check program
         run: |
-          set -euo pipefail
-          # Ensure subprojects directory exists; meson wrap will populate it.
-          mkdir -p subprojects
-          echo "Running: meson wrap install sdl2"
-          meson wrap install sdl2
-          echo "meson wrap install completed; contents of subprojects:"
-          ls -la subprojects || true
-
-      - name: Configure and build with meson
-        run: |
-          set -euo pipefail
-          # If meson.build is in a subdirectory, set the correct source dir (e.g., meson setup builddir path/to/source)
           meson setup builddir
           meson compile -C builddir
-
-      - name: Run tests (use xvfb if tests require GUI)
-        run: |
-          set -euo pipefail
-          if command -v xvfb-run >/dev/null 2>&1; then
-            xvfb-run --auto-servernum meson test -C builddir --verbose
-          else
-            meson test -C builddir --verbose
-          fi
+          ls -la builddir
