@@ -30,7 +30,7 @@ jobs:
       - name: Meson check
         run: | 
           set -euo pipefail
-          meson --version || { echo "meson not found! :( " }; exit 1;
+          meson --version || { echo "meson not found! :( "; exit 1; }
         
       - name: Build check program
         run: |
