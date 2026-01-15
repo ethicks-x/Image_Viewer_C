@@ -1,0 +1,14 @@
+on: 
+  push:
+    branches:
+      - main
+jobs:
+  test:
+    name: Test on gcc
+    runs-on: ubuntu-latest
+    steps:
+    - name: sdl2 install and run
+      run: |
+        sudo apt install libsdl2-2.0-0 libsdl2-dev
+        meson setup builddir
+        meson compile -C builddir
