@@ -1,18 +1,45 @@
-on: 
+on:
   push:
     branches:
       - main
+
 jobs:
   test:
     name: Test on gcc
     runs-on: ubuntu-latest
     steps:
-    - name: sdl2 install and run
-      run: |
-        sudo apt update
-        sudo apt upgrade -y
-        sudo apt install build-essential meson ninja-build -y
-        mkdir subprojects
-        meson wrap install sdl2
-        meson setup builddir
-        meson compile -C builddir
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Prepare apt and install system dependencies
+        run: |
+          set -euo pipefail
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y \
+            build-essential \
+            python3-pip \
+            pkg-config \
+            meson \
+            ninja-build
+
+      - name: Fetch Meson wrap dependencies (if your project uses wraps)
+        run: |
+          set -euo pipefail
+          # create subprojects if using wrap files; if you prefer system libs you can skip this
+          mkdir -p subprojects
+          meson wrap install sdl2 || echo "meson wrap install failed or not needed; continuing"
+
+      - name: Configure and build with meson
+        run: |
+          set -euo pipefail
+          meson setup builddir --buildtype=debug
+          meson compile -C builddir
+
+      - name: Run tests (use xvfb if tests require GUI)
+        run: |
+          set -euo pipefail
+          # If tests require a display, use xvfb-run. If not, remove xvfb-run.
+          if command -v xvfb-run >/dev/null 2>&1; then
+            xvfb-run --auto-servernum meson test -C builddir --verbose
+          else
+            meson test -C builddir --verbose
+          fi
