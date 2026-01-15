@@ -9,6 +9,10 @@ jobs:
     steps:
     - name: sdl2 install and run
       run: |
-        sudo apt install libsdl2-2.0-0 libsdl2-dev
+        sudo apt update
+        sudo apt upgrade -y
+        sudo apt install build-essential meson ninja-build -y
+        mkdir subprojects
+        meson wrap install sdl2
         meson setup builddir
         meson compile -C builddir
